@@ -179,13 +179,14 @@ bool gameWon(std::vector<std::vector<char>> grid, std::vector<std::vector<char>>
     return bombGrid == bombAnswer;
 }
 
-std::pair<bool, std::pair<int, int>> getInput() {
+std::pair<char, std::pair<int, int>> getInput() {
     std::string s;
     std::cin >> s;
-    bool flag = (s[0] == 'f');
-    if (flag)
-        return std::make_pair(true, std::make_pair(charToInt(s[1]), charToInt(s[2])));
-    return std::make_pair(false, std::make_pair(charToInt(s[0]), charToInt(s[1])));
+    if (s[0] == 'f')
+        return std::make_pair('f', std::make_pair(charToInt(s[1]), charToInt(s[2])));
+    if (s[0] == 'q')
+        return std::make_pair('q', std::make_pair(0, 0));
+    return std::make_pair('d', std::make_pair(charToInt(s[0]), charToInt(s[1])));
 }
 
 char digCell(std::vector<std::vector<char>> &grid, std::vector<std::vector<char>> &answers, int row, int col) {
@@ -253,7 +254,10 @@ void play(int rows, int cols, int mines) {
     std::vector<std::vector<char>> answers(rows, std::vector<char>(cols, SPACE)); 
     std::vector<std::vector<char>> grid(rows, std::vector<char>(cols, UNCOVERED));
     printBoard(grid);
-    std::pair<int, int> position = getInput().second;
+    std::pair<char, std::pair<int, int>> input = getInput();
+    std::pair<int, int> position = input.second;
+    if (input.first == 'q')
+        return;
     do {
         placeMines(answers, mines);
         placeNumbers(answers);
@@ -261,17 +265,19 @@ void play(int rows, int cols, int mines) {
     digCell(grid, answers, position.first, position.second);
     char cell;
     do {
-        std::pair<bool, std::pair<int, int>> input = getInput();
-        bool flag = input.first;
+        std::pair<char, std::pair<int, int>> input = getInput();
+        char type = input.first;
         std::pair<int, int> position = input.second;
-        if (flag) {
+        if (type == 'f')
             cell = flagCell(grid, position.first, position.second);
+        else if (type == 'q') {
+            return;
         }
         else
             cell = processDig(grid, answers, position.first, position.second);
     } while (cell && !gameWon(grid, answers)); 
 
-    if (cell == MINE) {
+    if (!cell) {
         std::cout << "You Lose!\n";
     }
     else {
