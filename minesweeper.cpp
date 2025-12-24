@@ -164,19 +164,17 @@ bool flagCell(std::vector<std::vector<char>> &grid, int row, int col) {
     return true;
 }
 
-bool gameWon(std::vector<std::vector<char>> grid, std::vector<std::vector<char>> answers) {
-    int bombGrid = 0;
-    int bombAnswer = 0;
-    for (int i = 0; i < answers.size(); i++) {
-        for (int j = 0; j < answers[0].size(); j++) {
-            if (answers[i][j] == MINE && grid[i][j] != FLAG) {
+bool gameWon(std::vector<std::vector<char>> &grid, std::vector<std::vector<char>> answers) {
+    for (int i = 0; i < answers.size(); i++)
+        for (int j = 0; j < answers[0].size(); j++)
+            if (answers[i][j] != MINE && grid[i][j] == UNCOVERED)
                 return false;
-            }
-            bombGrid += (grid[i][j] == FLAG);
-            bombAnswer += (answers[i][j] == MINE);
-        }
-    }
-    return bombGrid == bombAnswer;
+    clearScreen();
+    for (int i = 0; i < grid.size(); i++)
+        for (int j = 0; j < grid.size(); j++)
+            grid[i][j] = (grid[i][j] == UNCOVERED) ? FLAG : grid[i][j];
+    printBoard(grid);
+    return true; 
 }
 
 std::pair<char, std::pair<int, int>> getInput() {
