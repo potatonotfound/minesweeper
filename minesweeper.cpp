@@ -157,6 +157,37 @@ void placeNumbers(std::vector<std::vector<char>> &grid) {
     }
 }
 
+bool flagCell(std::vector<std::vector<char>> &grid, int row, int col) {
+    clearScreen();
+    grid[row][col] = FLAG;
+    printBoard(grid);
+    return true;
+}
+
+bool gameWon(std::vector<std::vector<char>> grid, std::vector<std::vector<char>> answers) {
+    int bombGrid = 0;
+    int bombAnswer = 0;
+    for (int i = 0; i < answers.size(); i++) {
+        for (int j = 0; j < answers[0].size(); j++) {
+            if (answers[i][j] == MINE && grid[i][j] != FLAG) {
+                return false;
+            }
+            bombGrid += (grid[i][j] == FLAG);
+            bombAnswer += (answers[i][j] == MINE);
+        }
+    }
+    return bombGrid == bombAnswer;
+}
+
+std::pair<bool, std::pair<int, int>> getInput() {
+    std::string s;
+    std::cin >> s;
+    bool flag = (s[0] == 'f');
+    if (flag)
+        return std::make_pair(true, std::make_pair(charToInt(s[1]), charToInt(s[2])));
+    return std::make_pair(false, std::make_pair(charToInt(s[0]), charToInt(s[1])));
+}
+
 char digCell(std::vector<std::vector<char>> &grid, std::vector<std::vector<char>> &answers, int row, int col) {
     clearScreen();
     if (answers[row][col] == MINE) {
@@ -193,35 +224,28 @@ char digCell(std::vector<std::vector<char>> &grid, std::vector<std::vector<char>
     return answers[row][col];
 }
 
-char flagCell(std::vector<std::vector<char>> &grid, int row, int col) {
-    clearScreen();
-    grid[row][col] = FLAG;
-    printBoard(grid);
-    return FLAG;
-}
+bool processDig(std::vector<std::vector<char>> &grid, std::vector<std::vector<char>> &answers, int row, int col) {
+    if (grid[row][col] == UNCOVERED)
+        return (digCell(grid, answers, row, col) != MINE);
+    
+    if (grid[row][col] == SPACE || grid[row][col] == FLAG)
+        return true;
 
-bool gameWon(std::vector<std::vector<char>> grid, std::vector<std::vector<char>> answers) {
-    int bombGrid = 0;
-    int bombAnswer = 0;
-    for (int i = 0; i < answers.size(); i++) {
-        for (int j = 0; j < answers[0].size(); j++) {
-            if (answers[i][j] == MINE && grid[i][j] != FLAG) {
-                return false;
-            }
-            bombGrid += (grid[i][j] == FLAG);
-            bombAnswer += (answers[i][j] == MINE);
-        }
+    std::vector<int> dirX = {-1, -1, -1, 0, 0, 1, 1, 1};
+    std::vector<int> dirY = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+    bool b = true;
+
+    for (int i = 0; i < 8; i++) {
+        int newX = dirX[i] + row;
+        int newY = dirY[i] + col;
+        if (newX < 0 || newX >= grid.size() || newY < 0 || newY >= grid[0].size())
+            continue;
+        if (grid[newX][newY] == FLAG)
+            continue;
+        b = b && (digCell(grid, answers, newX, newY) != MINE);
     }
-    return bombGrid == bombAnswer;
-}
-
-std::pair<bool, std::pair<int, int>> getInput() {
-    std::string s;
-    std::cin >> s;
-    bool flag = (s[0] == 'f');
-    if (flag)
-        return std::make_pair(true, std::make_pair(charToInt(s[1]), charToInt(s[2])));
-    return std::make_pair(false, std::make_pair(charToInt(s[0]), charToInt(s[1])));
+    return b;
 }
 
 void play(int rows, int cols, int mines) {
@@ -241,12 +265,11 @@ void play(int rows, int cols, int mines) {
         bool flag = input.first;
         std::pair<int, int> position = input.second;
         if (flag) {
-            std::cout << '!';
             cell = flagCell(grid, position.first, position.second);
         }
         else
-            cell = digCell(grid, answers, position.first, position.second);
-    } while (cell != MINE && !gameWon(grid, answers)); 
+            cell = processDig(grid, answers, position.first, position.second);
+    } while (cell && !gameWon(grid, answers)); 
 
     if (cell == MINE) {
         std::cout << "You Lose!\n";
