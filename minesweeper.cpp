@@ -259,7 +259,7 @@ void play(int rows, int cols, int mines) {
     do {
         placeMines(answers, mines);
         placeNumbers(answers);
-    } while (grid[position.first][position.second] == MINE);
+    } while (answers[position.first][position.second] == MINE);
     digCell(grid, answers, position.first, position.second);
     char cell;
     do {
@@ -295,6 +295,7 @@ void settings(int &rows, int &cols, int &mines) {
     bool isIntermediate = (rows == 16) && (cols == 16) && (mines == 40);
     bool isExpert = (rows == 30) && (cols == 16) && (mines == 99);
     bool isCustom = !isBeginner && !isIntermediate && !isExpert;
+    std::cout << "Settings\n" << "\n";
     std::cout << "0. Back\n";
     std::cout << "1. Difficulty:\n";
     std::cout << "   " << (isBeginner ? "<" : " ")     << " Beginner      8x8    (10 mines) " << (isBeginner ? ">" : " ") << "\n";
